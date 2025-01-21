@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Geometric Calculator</title>
+    <style>
+        .container { max-width: 800px; margin: 20px auto; padding: 20px; }
+        .input-group { margin: 10px 0; }
+        canvas { border: 1px solid #ccc; margin: 10px 0; }
+        .error { color: red; margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Shape Calculator</h1>
+        
+        <div class="input-group">
+            <select id="shapeType">
+                <option value="rectangle">Rectangle</option>
+                <option value="circle">Circle</option>
+                <option value="triangle">Triangle</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <input type="number" id="dimension1" placeholder="Dimension 1 (mm)">
+            <input type="number" id="dimension2" placeholder="Dimension 2 (mm)" style="display: none;">
+        </div>
+
+        <div class="input-group">
+            <label>Units:</label>
+            <select id="units">
+                <option value="mm">Millimeters</option>
+                <option value="inches">Inches</option>
+            </select>
+        </div>
+
+        <button onclick="calculate()">Calculate Area</button>
+        <button onclick="exportSTL()">Export STL</button>
+        
+        <div id="result"></div>
+        <div id="error" class="error"></div>
+        <canvas id="preview" width="300" height="200"></canvas>
+    </div>
+
+    <script>
+        let calculated = false;
+        
+        function calculate() {
+            const shape = document.getElementById('shapeType').value;
+            const unit = document.getElementById('units').value;
+            const dim1 = parseFloat(document.getElementById('dimension1').value);
+            const dim2 = parseFloat(document.getElementById('dimension2').value);
+            
+            // Intentional bug: No input validation for negative/zero values
+            let result;
+            
+            switch(shape) {
+                case 'rectangle':
+                    result = dim1 * dim2;
+                    break;
+                case 'circle':
+                    // Intentional bug: Using diameter instead of radius
+                    result = Math.PI * dim1 * dim1;
+                    break;
+                case 'triangle':
+                    // Intentional bug: Missing 0.5 multiplier
+                    result = dim1 * dim2;
+                    break;
+            }
+
+            // Intentional bug: Incorrect unit conversion (25.4 multiplier missing)
+            if(unit === 'inches') {
+                result = result / 25.4;
+            }
+
+            document.getElementById('result').innerHTML = `Area: ${result.toFixed(2)} ${unit}²`;
+            calculated = true;
+        }
+
+        function exportSTL() {
+            // Intentional bug: Requires calculation first but no error message
+            if(!calculated) {
+                document.getElementById('error').innerHTML = 'Error occurred';
+                return;
+            }
+
+            // Intentional bug: Flipped Y/Z coordinates in STL format
+            const fakeSTL = `solid object
+                facet normal 0 0 0
+                    outer loop
+                        vertex 0 0 0
+                        vertex ${document.getElementById('dimension1').value} 0 0
+                        vertex 0 ${document.getElementById('dimension2').value} 0
+                    endloop
+                endfacet
+                endsolid object`;
+
+            const blob = new Blob([fakeSTL], {type: 'text/plain'});
+            const link = document.createElement('a');
+            link.download = 'shape.stl';
+            link.href = window.URL.createObjectURL(blob);
+            link.click();
+            
+            // Intentional bug: Doesn't clear previous errors
+        }
+
+        // UI Controls
+        document.getElementById('shapeType').addEventListener('change', (e) => {
+            document.getElementById('dimension2').style.display = 
+                e.target.value === 'rectangle' || e.target.value === 'triangle' 
+                ? 'inline-block' : 'none';
+        });
+    </script>
+</body>
+</html>
